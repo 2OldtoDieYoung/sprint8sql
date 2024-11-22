@@ -32,10 +32,12 @@ func getTestParcel() Parcel {
 func TestAddGetDelete(t *testing.T) {
 
 	// настройте подключение к БД
-	db, _ := sql.Open("sqlite", "tracker.db")
+	db, err := sql.Open("sqlite", "tracker.db")
+	require.NoError(t, err)
+	defer db.Close()
+
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
-	defer db.Close()
 
 	// add
 	id, err := store.Add(parcel)
@@ -45,10 +47,9 @@ func TestAddGetDelete(t *testing.T) {
 	// get
 	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Client, storedParcel.Client)
-	require.Equal(t, parcel.Status, storedParcel.Status)
-	require.Equal(t, parcel.Address, storedParcel.Address)
-	require.Equal(t, parcel.CreatedAt, storedParcel.CreatedAt)
+	parcel.Number = 0
+	storedParcel.Number = 0
+	require.Equal(t, parcel, storedParcel)
 
 	// delete
 	err = store.Delete(id)
@@ -87,6 +88,7 @@ func TestSetAddress(t *testing.T) {
 
 // TestSetStatus проверяет обновление статуса
 func TestSetStatus(t *testing.T) {
+
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
